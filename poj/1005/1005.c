@@ -5,8 +5,9 @@
 int main()
 {
 	int x, y;
-	int count, i;
-	int pi = 3.14159;
+	int i;
+	unsigned int count;
+	float pi = 3.14159;
 
 	struct cart {
 		int index;
@@ -28,21 +29,24 @@ int main()
 
 	cur = head = &initial;
 
-	scanf("%d", &count);
+	scanf("%d", &i);
+	if(i<=0)
+		return -1;
+	count = i;
 
 	i = 1;
 	while(i<=count) {
+		//allocate a new struct
 		tmp = malloc(sizeof(struct cart));
 		memset(tmp, 0, sizeof(struct cart));
 
+		//set the struct values
 		scanf("%f %f", &tmp->x, &tmp->y);
 		tmp->index = i;
-		tmp->year = x<y?(pi*x*x/2/50.0):(pi*y*y/2/50.0);
-		if (tmp->year < 0)
-			tmp->year = 1;
-		else
-			tmp->year++;
+//		tmp->year = x>y?((pi*tmp->x*tmp->x)/2/50.0 + 1):((pi*tmp->x*tmp->x)/2/50.0 + 1);
+		tmp->year = (int)(pi*(tmp->x*tmp->x + tmp->y*tmp->y)/2/50.0) + 1;
 
+		//move pointer cur to the new struct
 		cur->next = tmp;
 		tmp->prev = cur;
 		tmp->next = NULL;
@@ -51,11 +55,7 @@ int main()
 		i++;
 	}
 
-//	tmp = count;
-//	while(tmp--) {
-//		printf("%d %f %f\n", head->index, head->x, head->y);
-//	}
-//
+	//move pointer cur to the list head;
 	cur = head->next;
 #if 0
 	printf("cur 's p = %p\n", cur);	
