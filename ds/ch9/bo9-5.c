@@ -42,3 +42,33 @@ Status InsertBST(BiTree T, ElemType e)
 	}
 	return FALSE;
 }
+
+Status DeleteBST(BiTree T, KeyType key)
+{
+	BiTree *p, l, r, tmp;
+
+	if (T == NULL)
+		return FALSE;
+
+	if (SearchBST(T, key, NULL, *p) == TRUE) {
+		if (!(*p)->lchild && !(*p)->rchild) {
+			free(*p);
+			//p的双亲节点怎么确定？
+			//不需要知道双亲节点，直接覆盖p的值就可以。
+		} else if ((*p)->lchild && !(*p)->rchild) {
+			(*p) = (*p)->lchild;
+		} else if (!(*p)->lchild && (*p)->rchild) {
+			(*p) = (*p)->rchild;
+		} else {
+			r = (*p)->rchild;
+			tmp = l = (*p)->lchild;
+			while (tmp->rchild) {
+				tmp = tmp->rchild;
+			}
+			tmp->rchild = r;
+			(*p)->lchild = l;
+		}
+		return TRUE;
+	}
+	return FALSE;
+}
