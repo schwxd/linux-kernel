@@ -72,3 +72,32 @@ Status DeleteBST(BiTree T, KeyType key)
 	}
 	return FALSE;
 }
+
+Status DeleteBST(BiTree *T, KeyType key)
+{
+	if (T == NULL)
+		return FALSE;
+
+	if (EQ(key, T->data.key))
+		return Delete(T);
+	else if (LT(key, T->data.key))
+		return DeleteBST(T->lchild, key);
+	else
+		return DeleteBST(T->rchild, key);
+}
+
+Status Delete(BiTree *p)
+{
+	BiTree q;
+	if (!*p->lchild) {
+		q = *p;
+		*p = *p->rchild;
+		free(q);
+	} else if (!*p->rchild) {
+		q = *p;
+		*p = *p->lchild;
+		free(q);
+	} else {
+		
+	}
+}
