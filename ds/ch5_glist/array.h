@@ -4,6 +4,6 @@
 typedef struct {
 	ElemType *base;
 	int dim;
-
-	
-}Array;
+	int *bounds;
+	int *constants;
+} Array;
