@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Sample styled page</title>
+    <!-- empty attributes
+    <style>
+      body { background: navy; color: yellow; }
+    </style>
+    -->
+  </head>
+
+  <body>
+    <h1>a html page</h1>
+    <p>contains nothing</p>
+    <p>This <em>is <strong>correct</strong>.</em></p>
+    <p>This is <em>very <strong>wrong</em>!</strong></p>
+    <p>This is a <a href="demo.html">simple</a> sample.</p>   
+    <p> click <a href="a.html">this link</a> to see details</p>
+    <article>this is article</article>
+
+    <form name="main">
+      Result: <output name="result"></output>
+      <script>
+	document.forms.main.elements.result.value = 'Hello World';
+      </script>
+    </form>
+
+    <!-- empty attributes -->
+    <input name=address disabled>
+    <input name=address disabled="">
+    <input name=address disabled="false">
+
+    <!-- attributes with a value -->
+    <input name=address width=300>
+    <input name=address width='400'>
+    <input name=address maxlength="500">
+
+    <script>
+      var img = new Image();
+      img.src = 'ic_clock_alarm_on.png';
+      img.alt = 'Games';
+    </script>
+
+<script>
+ var img = new Image();
+ img.src = 'ic_clock_alarm_on.png';
+ img.alt = 'Games';
+</script>
+<span style="color: green; background:
+yellow">green</span>
+  </body>
+</html>
