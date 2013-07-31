@@ -25,7 +25,7 @@ Status DestroyBiTree(BiTree *T)
 
 /* 算法6.4:按先序次序输入二叉树中结点的值（可为字符型或整型，在主程中 */
 /* 定义），构造二叉链表表示的二叉树T。变量Nil表示空（子）树。有改动 */
-#define CHAR
+//#define CHAR
 void CreateBiTree(BiTree *T)
 {
 	TElemType ch;
