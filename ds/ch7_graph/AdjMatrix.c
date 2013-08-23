@@ -61,7 +61,8 @@ Status CreateFAG(MGraph *G)
 	VertexType va, vb;
 
 	printf("input the graph data file (f7-1.dat)");
-	scanf("%s", filename);
+//	scanf("%s", filename);
+	strcpy(filename, "f7-1.dat");	
 	if (strlen(filename) == 0) {
 		printf("filename is null, use default\n");
 		strcpy(filename, "f7-1.dat");	
@@ -73,10 +74,10 @@ Status CreateFAG(MGraph *G)
 		return ERROR;
 	}
 	fscanf(graphfile, "%d%d", &(*G).vexnum, &(*G).arcnum);
-	for (i=0;i<(*G).vexnum;i++) {
+	for (i=0;i<(*G).vexnum;i++)	/* 构造顶点向量 */
 		fscanf(graphfile, "%s", (*G).vexs[i]);
-	}
-	for (i=0;i<(*G).vexnum;i++)
+
+	for (i=0;i<(*G).vexnum;i++)	/* 初始化邻接矩阵 */
 		for (j=0;j<(*G).vexnum;j++) {
 			(*G).arcs[i][j].adj = 0;
 			(*G).arcs[i][j].info = NULL;
@@ -87,7 +88,7 @@ Status CreateFAG(MGraph *G)
 		fscanf(graphfile, "%s %s", va, vb);
 		i = LocateVex(*G, va);
 		j = LocateVex(*G, vb);	
-		(*G).arcs[i][j].adj = (*G).arcs[j][i].adj = 1;
+		(*G).arcs[i][j].adj = (*G).arcs[j][i].adj = 1;	/* 无向图 */
 	}
 	fclose(graphfile);
 	(*G).kind = AG;
@@ -115,6 +116,7 @@ Status CreateDG(MGraph *G)
 		}
 	printf("input all the %d arcs:\n", (*G).arcnum);
 	for(k=0;k<(*G).arcnum;k++){
+		printf("input the arc's two vex:\n");
 		scanf("%s %s",va, vb );
 		i = LocateVex(*G, va);
 		j = LocateVex(*G, vb);
@@ -259,7 +261,9 @@ Status CreateAN(MGraph *G)
 
 /* 采用数组(邻接矩阵)表示法,构造图G。算法7.1 */
 Status CreateGraph(MGraph *G)
-{ 
+{
+	printf("请输入图G的类型(有向图:0,有向网:1,无向图:2,无向网:3): ");
+	scanf("%d", &(*G).kind);
 	switch ((*G).kind)
 	{
 		case DG:
@@ -278,17 +282,38 @@ Status CreateGraph(MGraph *G)
 void DestroyGraph(MGraph *G)
 { 
 	int i, j;
-	for (i = 0; i < (*G).arcnum; ++i) {
-		for (j = 0; j < (*G).arcnum; ++j) {
-			if ((*G).arcs[i][j].info) {
-				free((*G).arcs[i][j].info);
+	if ((*G).kind == AG || (*G).kind == AN) {			/* 有向 */
+		for (i = 0; i < (*G).vexnum; ++i) {			/* 释放弧的相关信息(如果有的话) */
+			for (j = 0; j < (*G).vexnum; ++j) {
+				if (((*G).arcs[i][j].adj == 1 && (*G).kind == DG) || ((*G).arcs[i][j].adj != INFINITE && (*G).kind == DN)) {
+					if ((*G).arcs[i][j].info) {
+						printf("now free arcs[%d][%d].info:\n", i, j);
+						free((*G).arcs[i][j].info);
+						(*G).arcs[i][j].info = NULL;
+					}
+				}
 			}
-			
 		}
-		
+	} else {		/* 无向 */
+		for (i = 0; i < (*G).vexnum; ++i) {		/* 释放边的相关信息(如果有的话) */
+			for (j = 0; j < (*G).vexnum; ++j) {
+				if (((*G).arcs[i][j].adj == 1 && (*G).kind == AG) || ((*G).arcs[i][j].adj != INFINITE && (*G).kind == AN)) {
+					if ((*G).arcs[i][j].info) {
+						printf("now free arcs[%d][%d].info:\n", i, j);
+						free((*G).arcs[i][j].info);
+						(*G).arcs[i][j].info = (*G).arcs[j][i].info = NULL;
+					}
+				}
+			}
+		}
+
 	}
-	free(*(*G).arcs);
-	free(G);	
+
+//	free(*(*G).arcs);
+//	free(G);
+   (*G).vexnum=0;
+   (*G).arcnum=0;
+
 }
 
 /* 初始条件: 图G存在，v是G中某个顶点的序号。操作结果: 返回v的值 */
@@ -305,7 +330,8 @@ Status PutVex(MGraph *G,VertexType v,VertexType value)
 	int i;
 	i = LocateVex(*G, v);
 	if (i != -1) {
-		strncpy((*G).vexs[i], value, MAX_NAME);
+//		strncpy((*G).vexs[i], value, MAX_NAME);
+		strcpy((*G).vexs[i], value);
 //		(*G).vexs[i] = value;
 		return OK;
 	} else
@@ -424,17 +450,20 @@ Status DeleteArc(MGraph *G,VertexType v,VertexType w)
 	return OK;
 }
 
-Boolean visited[MAX_VERTEX_NUM];	/* 访问标志数组(全局量) */
+//Boolean visited[MAX_VERTEX_NUM];	/* 访问标志数组(全局量) */
+int visited[MAX_VERTEX_NUM];	/* 访问标志数组(全局量) */
 Status (*VisitFunc)(VertexType);	/* 函数变量 */
 /* 从第v个顶点出发递归地深度优先遍历图G。算法7.5 */
 void DFS(MGraph G,int v)
 {
 	int w;
-	visited[v] = TRUE;
-	VisitFunc(G.vexs[v]);
-	for (w = FirstAdjVex(G, G.vexs[v]); w >= 0; w = NextAdjVex(G, G.vexs[v], G.vexs[w])) {
-		if (visited[w] == FALSE)
-			DFS(G, w);
+	if (visited[v] == FALSE) {
+		visited[v] = TRUE;
+		VisitFunc(G.vexs[v]);
+		for (w = FirstAdjVex(G, G.vexs[v]); w >= 0; w = NextAdjVex(G, G.vexs[v], G.vexs[w])) {
+			if (visited[w] == FALSE)
+				DFS(G, w);
+		}
 	}
 }
 
@@ -444,12 +473,14 @@ void DFS(MGraph G,int v)
 void DFSTraverse(MGraph G,Status(*Visit)(VertexType))
 {
 	int i;
+	VisitFunc = Visit;
 	for (i = 0; i < MAX_VERTEX_NUM; i++)
 		visited[i] = FALSE;
 
 	for (i = 0; i < MAX_VERTEX_NUM; ++i) {
 		DFS(G, i);
 	}
+	printf("\n");
 }
 
 #define QElemType int
@@ -484,6 +515,7 @@ void BFSTraverse(MGraph G,Status(*Visit)(VertexType))
 			}
 		}
 	}
+	printf("\n");
 }
 
 /* 输出邻接矩阵G */
@@ -491,7 +523,7 @@ void BFSTraverse(MGraph G,Status(*Visit)(VertexType))
 void Display(MGraph G)
 {
 	int i,j;
-	char s[7],s1[3];
+	char s[10],s1[10];
 	switch(G.kind)
 	{
 	case DG: strcpy(s,"有向图\0");
@@ -506,8 +538,9 @@ void Display(MGraph G)
 	case AN: strcpy(s,"无向网\0");
 		strcpy(s1,"边\0");
 	}
+	printf("======================================================\n");
 	printf("%d个顶点%d条%s的%s\n",G.vexnum,G.arcnum,s1,s);
-	printf("sizeof(struct MGraph):%d, sizeof(struct ArcCell):%d, sizeof(AdjMatrix):%d\n", sizeof(MGraph), sizeof(ArcCell), sizeof(AdjMatrix));
+//	printf("sizeof(struct MGraph):%d, sizeof(struct ArcCell):%d, sizeof(AdjMatrix):%d\n", sizeof(MGraph), sizeof(ArcCell), sizeof(AdjMatrix));
 	for(i=0;i<G.vexnum;++i) /* 输出G.vexs */
 		printf("G.vexs[%d]=%s\n",i,G.vexs[i]);
 	printf("G.arcs.adj:\n"); /* 输出G.arcs.adj */
@@ -533,5 +566,5 @@ void Display(MGraph G)
 				if(G.arcs[i][j].info)
 					printf("%5s %11s     %s\n",G.vexs[i],G.vexs[j],G.arcs[i][j].info);
 	}
-	printf("done with display\n");
+	printf("-------------------------------------------------------\n");
 }
