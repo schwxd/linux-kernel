@@ -311,9 +311,8 @@ void DestroyGraph(MGraph *G)
 
 //	free(*(*G).arcs);
 //	free(G);
-   (*G).vexnum=0;
-   (*G).arcnum=0;
-
+	(*G).vexnum=0;
+	(*G).arcnum=0;
 }
 
 /* 初始条件: 图G存在，v是G中某个顶点的序号。操作结果: 返回v的值 */
@@ -342,11 +341,15 @@ Status PutVex(MGraph *G,VertexType v,VertexType value)
 /* 操作结果: 返回v的第一个邻接顶点的序号。若顶点在G中没有邻接顶点,则返回-1 */
 int FirstAdjVex(MGraph G,VertexType v)
 {
-	int i, j;
+	int i, j, k;
 	i = LocateVex(G, v);
+	if (G.kind == DN || G.kind == AN)
+		k = INFINITE;
+	else
+		k = 0;
 	if (i != -1) {
 		for (j = 0; j < G.vexnum; ++j) {
-			if (G.arcs[i][j].adj == 1)
+			if (G.arcs[i][j].adj != k)
 				return j;
 		}
 	}
@@ -359,11 +362,16 @@ int FirstAdjVex(MGraph G,VertexType v)
 int NextAdjVex(MGraph G,VertexType v,VertexType w)
 {
 	int i, j, k;
+	VRType m;
+	if (G.kind == AN || G.kind == DN)
+		m = INFINITE;
+	else
+		m = 0;
 	i = LocateVex(G, v);
 	j = LocateVex(G, w);
 	if (i != -1 && j != -1) {
 		for (k = j+1; k < G.vexnum; k++) {
-			if (G.arcs[i][k].adj == 1)
+			if (G.arcs[i][k].adj != m)
 				return k;
 		}
 	}
@@ -374,12 +382,30 @@ int NextAdjVex(MGraph G,VertexType v,VertexType w)
 /* 操作结果: 在图G中增添新顶点v(不增添与顶点相关的弧,留待InsertArc()去做) */
 void InsertVex(MGraph *G,VertexType v)
 {
-	int pos;
-	pos = (*G).vexnum + 1;
-	if (pos > MAX_VERTEX_NUM)
+	/* int pos; */
+	/* pos = (*G).vexnum + 1; */
+	/* if (pos > MAX_VERTEX_NUM) */
+	/* 	exit(OVERFLOW); */
+	/* strncpy((*G).vexs[pos], v, MAX_NAME); */
+	/* (*G).vexnum++; */
+
+	int i, pos;
+	pos = (*G).vexnum;
+	if (pos >= MAX_VERTEX_NUM)
 		exit(OVERFLOW);
-//	(*G).vexs[pos] = v;
 	strncpy((*G).vexs[pos], v, MAX_NAME);
+	for (i = 0; i < (*G).vexnum; ++i) {
+		if ((*G).kind == AN || (*G).kind == DN) {
+			(*G).arcs[i][pos].adj = INFINITE;
+			(*G).arcs[pos][i].adj = INFINITE;
+		} else {
+			(*G).arcs[i][pos].adj = 0;
+			(*G).arcs[pos][i].adj = 0;
+		}
+		/* 初始化相关信息指针 */
+		(*G).arcs[i][pos].info = NULL;
+		(*G).arcs[pos][i].info = NULL;
+	}
 	(*G).vexnum++;
 }
 
@@ -387,26 +413,48 @@ void InsertVex(MGraph *G,VertexType v)
 Status DeleteVex(MGraph *G,VertexType v)
 {
 	int i, j;
+	VRType m;
 	i = LocateVex(*G, v);
 	if (i == -1)
 		return ERROR;
+	if ((*G).kind == AN || (*G).kind == DN)
+		m = INFINITE;
+	else
+		m = 0;
 	for (j = 0; j < (*G).vexnum; ++j) {
 		//row
-		if ((*G).arcs[i][j].adj == 1)
-			(*G).arcs[i][j].adj = 0;
-		if ((*G).arcs[i][j].info != NULL) {
-			free((*G).arcs[i][j].info);
-			(*G).arcs[i][j].info = NULL;
+		if ((*G).arcs[i][j].adj != m) {
+			if ((*G).arcs[i][j].info != NULL) {
+				free((*G).arcs[i][j].info);
+				(*G).arcs[i][j].info = NULL;
+			}
+			(*G).arcnum--;
 		}
 
 		//colume
-		if ((*G).arcs[j][i].adj == 1)
-			(*G).arcs[j][i].adj = 0;
-		if ((*G).arcs[j][i].info != NULL) {
-			free((*G).arcs[j][i].info);
-			(*G).arcs[j][i].info = NULL;
+		if ((*G).arcs[j][i].adj != m) {
+			if ((*G).arcs[j][i].info != NULL) {
+				free((*G).arcs[j][i].info);
+				(*G).arcs[j][i].info = NULL;
+			}
+			(*G).arcnum--;
 		}
 	}
+
+	/* 序号i后面的顶点向量依次前移 */
+	for (j = i; j < (*G).vexnum-1; j++)
+//		(*G).vexs[j] = (*G).vexs[j+1];
+		strcpy((*G).vexs[j], (*G).vexs[j+1]);
+
+	//?????
+   /* for(i=0;i<(*G).vexnum;i++) */
+   /*   for(j=k+1;j<(*G).vexnum;j++) */
+   /*     (*G).arcs[i][j-1]=(*G).arcs[i][j]; /\* 移动待删除顶点之后的矩阵元素 *\/ */
+   /* for(i=0;i<(*G).vexnum;i++) */
+   /*   for(j=k+1;j<(*G).vexnum;j++) */
+   /*     (*G).arcs[j-1][i]=(*G).arcs[j][i]; /\* 移动待删除顶点之下的矩阵元素 *\/ */
+
+	(*G).vexnum--;
 	return OK;
 }
 
